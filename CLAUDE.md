@@ -63,6 +63,11 @@ the code holds out 20% of `train.json` as a validation split, stratified.
   Mention it in the report instead.
 - **87 reviews appear in both `train.json` and `test.json`** (~4.7% of the test set). A
   property of the given data; `data/` is read-only. Worth one honest sentence in (d).
+- **Stop-word removal invents bigrams.** `lower problems` ranks as the 2nd strongest
+  negative term but nobody wrote it - it is "lower back problems" with the stop word
+  `back` deleted, fusing two non-adjacent words. The reviews are about back pain, not bad
+  products. Do not quote it in the report as evidence of anything but this. Worth a
+  sentence in (a) on why stop-word removal and n-grams interact badly.
 - **Bigrams help, but not via negation.** Of 155 negation bigrams in the vocabulary only 11
   are frequent enough to score and only 80 lean negative. `doesn work` occurs 7 times in
   the whole corpus. Bigrams pay off on fixed phrases (`waste money`, `highly recommend`).
