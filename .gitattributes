@@ -1,0 +1,8 @@
+# Keep line endings consistent across Windows / macOS / Linux teammates.
+* text=auto eol=lf
+
+# Data and binaries: leave exactly as they are.
+*.json  -text
+*.csv   -text
+*.pdf   binary
+*.ipynb -text
