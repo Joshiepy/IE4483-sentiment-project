@@ -7,6 +7,10 @@ scikit-learn
 jupyter
 matplotlib
 
+# Terminal charts - only src/explore_terminal.py needs this.
+# Pinned below 6.0: plotext 6.x is a rewrite with an incompatible API.
+plotext<6
+
 # Optional - only if you go for the deep-learning model (RNN / BERT)
 # torch
 # transformers
