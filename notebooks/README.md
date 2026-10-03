@@ -5,11 +5,12 @@ to re-run it reliably, move it into `src/` as a script.
 
 | Notebook | What it is | Where to run it |
 |----------|------------|-----------------|
+| `01_explore_data.ipynb` | Phase 1 - class balance, review lengths, vocabulary. Writes the report figures to `results/figures/` | anywhere (CPU, ~15 s) |
 | `tfidf_features_example.ipynb` | Provided by the course - how to turn raw review text into TF-IDF features | anywhere (CPU) |
 | `colab_bert_training.ipynb` | Fine-tunes DistilBERT and writes `submission.csv` | **Google Colab with a T4 GPU** |
 
 Suggested notebooks to add as you go:
-- `01_explore_data.ipynb` - review lengths, word frequencies, class balance plots
+- `02_error_analysis.ipynb` - Phase 4, contrasting TF-IDF and BERT on the same reviews
 
 ## Running the Colab notebook
 

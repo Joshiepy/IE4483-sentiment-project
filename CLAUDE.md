@@ -52,6 +52,22 @@ the code holds out 20% of `train.json` as a validation split, stratified.
 **Current baseline to beat:** TF-IDF (1-2 grams, 20k features) + Logistic Regression
 = **0.9095 validation accuracy**. Any new model should be compared against this.
 
+**Phase 1 findings** (from `notebooks/01_explore_data.ipynb`, 3 Oct 2026):
+
+- **Use `max_length=256` for BERT.** 98.8% of reviews fit whole by word count (~97.7% after
+  subword expansion). Median review is 42 words; 512 buys ~2% more coverage at ~4x the
+  attention cost.
+- **`train.json` contains 216 duplicate rows** (151 distinct texts, no conflicting labels),
+  so copies straddle the 80/20 split and validation accuracy is mildly optimistic. We are
+  **not** de-duplicating - that would move the baseline everyone is comparing against.
+  Mention it in the report instead.
+- **87 reviews appear in both `train.json` and `test.json`** (~4.7% of the test set). A
+  property of the given data; `data/` is read-only. Worth one honest sentence in (d).
+- **Bigrams help, but not via negation.** Of 155 negation bigrams in the vocabulary only 11
+  are frequent enough to score and only 80 lean negative. `doesn work` occurs 7 times in
+  the whole corpus. Bigrams pay off on fixed phrases (`waste money`, `highly recommend`).
+  This is the data-driven argument for BERT - use it in (f).
+
 **Reproducibility is graded** (question b). Every script fixes `RANDOM_SEED = 42`.
 Keep it that way, or average over multiple runs instead.
 
