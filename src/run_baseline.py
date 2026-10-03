@@ -83,7 +83,10 @@ def main():
     submission = test_df.copy()
     submission["predictions"] = test_pred
     out_path = RESULTS_DIR / "submission.csv"
-    submission.to_csv(out_path, index=False)
+    # The explicit line terminator keeps this file byte-identical on Windows,
+    # macOS and Linux. Without it, re-running on a different OS shows up as a
+    # fake 1800-line diff for your groupmates.
+    submission.to_csv(out_path, index=False, lineterminator="\n")
     print(f"\nWrote {len(submission)} predictions to {out_path}")
 
 
