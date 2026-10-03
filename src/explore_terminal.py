@@ -11,6 +11,7 @@ what each number means for the report, and it produces the 200 dpi figures that
 actually go into the PDF. This is for a quick look without leaving the terminal.
 """
 
+import shutil
 import sys
 from pathlib import Path
 
@@ -40,8 +41,11 @@ if hasattr(sys.stdout, "reconfigure"):
 # Same two colours as the notebook figures, as close as 256-colour terminals get.
 NEG, POS = "blue", "orange"
 
-# Narrow enough to survive a split terminal pane.
-WIDTH = 78
+# Fit the actual terminal instead of assuming a width: anything wider than the
+# window wraps and the charts turn to mush. Clamped because the labels need
+# roughly 60 columns to stay readable, and past ~110 the bars just look stretched.
+# get_terminal_size falls back to 80 when the output is piped or redirected.
+WIDTH = max(60, min(shutil.get_terminal_size(fallback=(80, 24)).columns - 2, 110))
 
 
 def heading(text):
