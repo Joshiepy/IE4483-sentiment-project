@@ -77,3 +77,8 @@ so output stays identical across the group's different machines.
 This is assessed work under the NTU Honour Code. Claude may help write, debug and
 explain code, but the group must understand and be able to defend everything
 submitted. All sources and references must be cited in the report.
+
+## Where to start
+
+Read `report/project-plan.md` - it breaks the eight questions into phases, flags
+which ones need experiments, and lists what separates an A from a B.
