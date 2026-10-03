@@ -1,0 +1,12 @@
+# Core (needed for the baseline in src/run_baseline.py)
+numpy
+pandas
+scikit-learn
+
+# Notebooks
+jupyter
+matplotlib
+
+# Optional - only if you go for the deep-learning model (RNN / BERT)
+# torch
+# transformers
