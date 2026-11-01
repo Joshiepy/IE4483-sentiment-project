@@ -44,7 +44,8 @@ def main():
     vectorizer = TfidfVectorizer(
         lowercase=True,
         stop_words="english",
-        ngram_range=(1, 2),   # unigrams + bigrams, so "not good" survives
+        ngram_range=(1, 2),   # unigrams + bigrams, e.g. "waste money". Note: stop_words
+                              # removes "not" first, so "not good" is NOT a feature.
         min_df=2,             # ignore words appearing in only one review
         max_features=20000,
     )
