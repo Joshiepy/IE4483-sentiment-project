@@ -38,10 +38,10 @@ vocabulary, so the rows differ only by classifier:
 
 | Model | Accuracy | Macro F1 | Negative F1 | Train time | Parameters |
 |---|---|---|---|---|---|
-| TF-IDF + Logistic Regression | 0.9095 | 0.8334 | 0.7208 | 0.05 s | 20,001 |
+| TF-IDF + Logistic Regression | 0.9095 | 0.8334 | 0.7208 | 0.04 s | 20,001 |
 | **TF-IDF + Linear SVM** | **0.9325** | **0.8579** | **0.7549** | 0.03 s | 20,001 |
-| TF-IDF + SVD(200) + MLP(128,64) | 0.9095 | 0.7995 | 0.6510 | 7.7 s | 4,034,049 |
-| DistilBERT *(15% split)* | 0.9487 | 0.8951 | not recorded | GPU | ~66M |
+| TF-IDF + SVD(200) + MLP(128,64) | 0.9095 | 0.7995 | 0.6510 | 7.19 s | 4,034,049 |
+| DistilBERT *(15% split)* | 0.9487 | 0.8951 | not recorded | not recorded | ~66M |
 
 Two things to carry into the report:
 
@@ -53,9 +53,9 @@ Two things to carry into the report:
    review already scores 0.853 accuracy. Macro F1 is the number to quote.
 
 The MLP figures here differ slightly from the ones printed in
-`notebooks/02_svm_mlp.ipynb` (0.7995 vs 0.8078 macro F1). Adam plus early
-stopping is sensitive to the scikit-learn version; the numbers in this table are
-the ones to cite, because they are the ones produced on the shared split.
+`notebooks/02_svm_mlp.ipynb` (0.7995 vs 0.8078 macro F1), and the SVM differs by
+0.0006. The cause was not isolated. The numbers in this table are the ones to
+cite, because they come from the single shared run.
 
 ## The two submission files
 

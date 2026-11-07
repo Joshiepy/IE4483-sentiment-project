@@ -26,8 +26,8 @@ seed 42:
 | Model | Where | Owner | Validation accuracy | Macro F1 | Split |
 |---|---|---|---|---|---|
 | TF-IDF + Logistic Regression | `src/run_baseline.py` | Joshua | 0.9095 | 0.83 | 80/20 |
-| Linear SVM | `notebooks/02_svm_mlp.ipynb` | Jayce | **0.9325** | **0.8585** | 80/20 |
-| MLP (TF-IDF + SVD 200, 128-64) | `notebooks/02_svm_mlp.ipynb` | Jayce | 0.9115 | 0.8078 | 80/20 |
+| Linear SVM | `notebooks/02_svm_mlp.ipynb` | Jayce | **0.9325** | **0.8579** | 80/20 |
+| MLP (TF-IDF + SVD 200, 128-64) | `notebooks/02_svm_mlp.ipynb` | Jayce | 0.9095 | 0.7995 | 80/20 |
 | DistilBERT, 4 epochs | `notebooks/03_distilbert.ipynb` | Ryan | **0.9487** | **0.8951** | 85/15 |
 
 The first three share the *same* 1,481-review validation split and are directly
@@ -147,20 +147,21 @@ positive). Always guessing "positive" scores ~85% accuracy while being useless, 
 the code holds out 20% of `train.json` as a validation split, stratified.
 
 **Current best:** DistilBERT at **0.9487** accuracy / **0.8951** macro F1, though on a
-15% split. The best strictly-comparable model is the **Linear SVM at 0.9325 / 0.8585**,
+15% split. The best strictly-comparable model is the **Linear SVM at 0.9325 / 0.8579**,
 which beats the 0.9095 logistic-regression baseline on the identical split while
-training in 0.11 s. Compare any new model against the SVM, not the baseline.
+training in 0.03 s. Compare any new model against the SVM, not the baseline.
 
 **The chosen TF-IDF settings are not quite optimal, and that is recorded on purpose.**
-`src/tune_hyperparameters.py` shows `sublinear_tf=True` (+0.0143) and `C=10` (+0.0212)
-each improve the logistic regression, which reaches **0.8546** macro F1 fully tuned.
+`src/tune_hyperparameters.py` shows `sublinear_tf=True` (+0.0143) and `C=10` (+0.0135)
+each improve the logistic regression; together they reach **0.8546** macro F1 (+0.0212).
+That combined run was a one-off check and is not in `hyperparameter_search.csv`.
 We kept the original settings because every figure and table is built on them and the
 *ranking does not change* - the untuned Linear SVM still wins at 0.8579. Do not "fix"
 this without re-running the whole comparison. `class_weight="balanced"` is the one
 setting that matters enormously: removing it costs 0.1726 macro F1.
 
 **Negative-class recall is the real problem,** not accuracy. Every model is far weaker
-on the minority class: negative F1 runs 0.67 (MLP) to 0.76 (SVM) against 0.95-0.96
+on the minority class: negative F1 runs 0.65 (MLP) to 0.75 (SVM) against 0.95-0.96
 positive. That gap is what questions (e) and (f) should be about.
 
 **Phase 1 findings** (from `notebooks/01_explore_data.ipynb`, 3 Oct 2026):

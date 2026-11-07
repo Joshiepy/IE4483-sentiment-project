@@ -10,7 +10,7 @@ to re-run it reliably, move it into `src/` as a script.
 | `03_distilbert.ipynb` | Ryan | Fine-tunes DistilBERT end to end and writes `results/submission_distilbert.csv` | CPU works but is slow; a T4 GPU is much faster |
 | `04_distilbert_20split.ipynb` | Ryan | **Not run yet.** The same DistilBERT at `test_size=0.2`, so it lands on the split the other three share. Writes `results/distilbert_metrics.json` | **Google Colab with a T4 GPU** |
 | `tfidf_features_example.ipynb` | course | Provided by the course - how to turn raw review text into TF-IDF features | anywhere (CPU) |
-| `colab_bert_training.ipynb` | Joshua | **Superseded by `03_distilbert.ipynb`.** An empty Colab scaffold written before Ryan trained the real model; kept only for the Colab setup cells | Google Colab, T4 GPU |
+| `colab_bert_training.ipynb` | Joshua | **Superseded by `03_distilbert.ipynb`.** A Colab DistilBERT notebook with no saved outputs; `03_distilbert.ipynb` is the run the report uses | Google Colab, T4 GPU |
 
 ## The validation splits do not match
 
