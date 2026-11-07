@@ -10,6 +10,7 @@ Re-run the script instead.
 | `figures/fig01` - `fig05` | `notebooks/01_explore_data.ipynb` |
 | `figures/fig06_architecture.png` | `python src/make_architecture_figure.py` |
 | `model_comparison.csv` / `.json` | `python src/compare_models.py` |
+| `hyperparameter_search.csv` | `python src/tune_hyperparameters.py` |
 | `figures/fig07` - `fig08` | `python src/make_comparison_figures.py` |
 | `distilbert_metrics.json` | `notebooks/04_distilbert_20split.ipynb` (not run yet) |
 

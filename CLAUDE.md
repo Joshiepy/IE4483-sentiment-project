@@ -133,6 +133,7 @@ python src/run_baseline.py    # TF-IDF + LogReg, writes results/submission.csv
 python src/error_analysis.py  # right/wrong examples for report question (e)
 python src/make_architecture_figure.py   # fig06, the architecture figure for (b)
 python src/compare_models.py             # all TF-IDF models on one split -> (c), (f)
+python src/tune_hyperparameters.py       # 46 one-at-a-time experiments -> (c)
 python src/make_comparison_figures.py    # fig07 confusion matrices, fig08 comparison
 ```
 
@@ -149,6 +150,14 @@ the code holds out 20% of `train.json` as a validation split, stratified.
 15% split. The best strictly-comparable model is the **Linear SVM at 0.9325 / 0.8585**,
 which beats the 0.9095 logistic-regression baseline on the identical split while
 training in 0.11 s. Compare any new model against the SVM, not the baseline.
+
+**The chosen TF-IDF settings are not quite optimal, and that is recorded on purpose.**
+`src/tune_hyperparameters.py` shows `sublinear_tf=True` (+0.0143) and `C=10` (+0.0212)
+each improve the logistic regression, which reaches **0.8546** macro F1 fully tuned.
+We kept the original settings because every figure and table is built on them and the
+*ranking does not change* - the untuned Linear SVM still wins at 0.8579. Do not "fix"
+this without re-running the whole comparison. `class_weight="balanced"` is the one
+setting that matters enormously: removing it costs 0.1726 macro F1.
 
 **Negative-class recall is the real problem,** not accuracy. Every model is far weaker
 on the minority class: negative F1 runs 0.67 (MLP) to 0.76 (SVM) against 0.95-0.96
