@@ -14,6 +14,89 @@ sentiment classification of product reviews**. Binary: 0 = negative, 1 = positiv
 - The full brief is `report/IE4483-Project1-brief.pdf`; the eight graded questions
   (a) to (h) are broken down in `report/report-outline.md`.
 
+**The data.** `data/train.json` holds 7,401 labelled reviews (6,319 positive,
+1,082 negative) and `data/test.json` holds 1,851 unlabelled ones. The fields are
+`reviews` (raw text) and `sentiments` (0 or 1). They are Amazon-style product
+reviews, heavily about shoes and clothing; the median review is 42 words.
+
+**The method.** One model is finished: TF-IDF (lowercased, English stop words,
+1-2 grams, `min_df=2`, 20,000 features) feeding a logistic regression with
+`class_weight="balanced"`, all in `src/run_baseline.py`. A DistilBERT model is
+planned but **not trained yet**, so every number in the report today comes from
+this baseline.
+
+**Measured results** - seed 42, 1,481-review validation split, re-verified 30 Oct 2026:
+
+| Metric | Value |
+|---|---|
+| Validation accuracy | 0.9095 |
+| Negative precision / recall / F1 | 0.66 / 0.80 / 0.72 |
+| Positive precision / recall / F1 | 0.96 / 0.93 / 0.95 |
+| Macro F1 | 0.83 |
+| Confusion matrix | TN 173, FP 44, FN 90, TP 1174 |
+
+The feature matrix is 5,920 x 20,000 and the 20,000 cap is actually reached:
+6,120 unigrams + 13,880 bigrams, 0.15% non-zero, about 29 active terms per
+review, 2.1 MB sparse against 947 MB if it were dense. Those are the resource
+numbers question (f) needs for the TF-IDF side of the comparison.
+
+## What the report must include
+
+The brief asks eight questions worth 100% between them. `report/report-outline.md`
+has the full breakdown; this is the short version plus the requirements that are
+easiest to lose marks on.
+
+| Q | Section | Marks | Status |
+|---|---|---|---|
+| (a) | Feature format + preprocessing | 10% | figures placed, prose to write |
+| (b) | Model description + architecture figure + code | 20% | figure placed, prose to write |
+| (c) | Hyperparameters + justification | 10% | needs the experiment table |
+| (d) | Test predictions + `submission.csv` | 20% | numbers measured, prose to write |
+| (e) | Error analysis, 1-2 cases | 10% | run `src/error_analysis.py` |
+| (f) | Feature format vs resources and accuracy | 10% | needs a second model |
+| (g) | Hotel reviews, no rating scores | 10% | **written** |
+| (h) | Hotel reviews, noisy rating scores | 10% | **written** |
+
+Hard requirements - these are explicit in the brief and are where marks get lost:
+
+- **The cover page lists all three members and what each one did individually.**
+- **(b) needs an architecture figure**, not a prose description of the model.
+- **(b) must state reproducibility** - seed 42, fixed in every script.
+- **(h) must name exactly three approaches**, clearly numbered.
+- **Never report accuracy alone.** At 85% positive, always guessing "positive"
+  scores 85%. Give macro F1 and per-class precision and recall, and say why.
+- **Use our own measured numbers.** Never fill a table from a blog post.
+- **Cite every source**, APA 7th, alphabetical.
+- `submission.csv` has columns `reviews` and `predictions`, 1,851 rows.
+
+## The report document
+
+The report itself is a Word file and lives outside this repo.
+
+- **Original - never edit it:** the Teams-synced copy shared with the group.
+  Editing it would collide with whatever a teammate has open.
+- **Working copy - the only file to edit:**
+  `C:\Users\joshu\OneDrive - Nanyang Technological University\IE4483\IE4483 Project Report Team 67.docx`
+  This is Joshua's own copy of the Teams document.
+- **Back it up before any scripted edit**, and close it in Word first - Word holds
+  a lock and OneDrive syncs in the background.
+- Sections 8 and 9, questions (g) and (h), are **already written** and fully
+  referenced. Do not rewrite them; they are the strongest part of the report.
+
+## Figures
+
+- Every chart is a **PNG in `results/figures/`** at 200 dpi - that directory, not
+  a bare `figures/`, because `results/` is where generated output already lives.
+- Figures are **produced by code, never drawn by hand**: the EDA ones come from
+  `notebooks/01_explore_data.ipynb`, the architecture one from
+  `src/make_architecture_figure.py`. If a figure is wrong, fix the script and
+  re-run it rather than editing the image or the Word copy.
+- The palette is fixed so every figure looks like it came from one place:
+  negative `#2a78d6`, positive `#eb6834`, paper `#fcfcfb`.
+- In the Word file each figure is sized to 6.27 in (A4 width minus the 1 in
+  margins), centred, and followed by a `Caption`-styled line built on a
+  `SEQ Figure` field so Word renumbers them automatically.
+
 ## Branching
 
 - `main` - stable. Do not commit here directly.
@@ -38,6 +121,7 @@ report/      the brief and the report outline
 python src/load_data.py       # sanity check - prints dataset sizes
 python src/run_baseline.py    # TF-IDF + LogReg, writes results/submission.csv
 python src/error_analysis.py  # right/wrong examples for report question (e)
+python src/make_architecture_figure.py   # fig06, the architecture figure for (b)
 ```
 
 ## Things that matter when working on this
