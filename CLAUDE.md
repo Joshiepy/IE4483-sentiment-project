@@ -19,11 +19,21 @@ sentiment classification of product reviews**. Binary: 0 = negative, 1 = positiv
 `reviews` (raw text) and `sentiments` (0 or 1). They are Amazon-style product
 reviews, heavily about shoes and clothing; the median review is 42 words.
 
-**The method.** One model is finished: TF-IDF (lowercased, English stop words,
-1-2 grams, `min_df=2`, 20,000 features) feeding a logistic regression with
-`class_weight="balanced"`, all in `src/run_baseline.py`. A DistilBERT model is
-planned but **not trained yet**, so every number in the report today comes from
-this baseline.
+**The method.** The shared feature pipeline is TF-IDF (lowercased, English stop
+words, 1-2 grams, `min_df=2`, 20,000 features). **Four models are trained**, all at
+seed 42:
+
+| Model | Where | Owner | Validation accuracy | Macro F1 | Split |
+|---|---|---|---|---|---|
+| TF-IDF + Logistic Regression | `src/run_baseline.py` | Joshua | 0.9095 | 0.83 | 80/20 |
+| Linear SVM | `notebooks/02_svm_mlp.ipynb` | Jayce | **0.9325** | **0.8585** | 80/20 |
+| MLP (TF-IDF + SVD 200, 128-64) | `notebooks/02_svm_mlp.ipynb` | Jayce | 0.9115 | 0.8078 | 80/20 |
+| DistilBERT, 4 epochs | `notebooks/03_distilbert.ipynb` | Ryan | **0.9487** | **0.8951** | 85/15 |
+
+The first three share the *same* 1,481-review validation split and are directly
+comparable. **DistilBERT used a 15% split, so its number is not strictly comparable**
+to the other three - say so in the report, or re-run it at 20% with
+`notebooks/04_distilbert_20split.ipynb`.
 
 **Measured results** - seed 42, 1,481-review validation split, re-verified 30 Oct 2026:
 
@@ -50,10 +60,10 @@ easiest to lose marks on.
 |---|---|---|---|
 | (a) | Feature format + preprocessing | 10% | figures placed, prose to write |
 | (b) | Model description + architecture figure + code | 20% | figure placed, prose to write |
-| (c) | Hyperparameters + justification | 10% | needs the experiment table |
+| (c) | Hyperparameters + justification | 10% | all four configs recorded, prose to write |
 | (d) | Test predictions + `submission.csv` | 20% | numbers measured, prose to write |
 | (e) | Error analysis, 1-2 cases | 10% | run `src/error_analysis.py` |
-| (f) | Feature format vs resources and accuracy | 10% | needs a second model |
+| (f) | Feature format vs resources and accuracy | 10% | four models measured, prose to write |
 | (g) | Hotel reviews, no rating scores | 10% | **written** |
 | (h) | Hotel reviews, noisy rating scores | 10% | **written** |
 
@@ -109,7 +119,7 @@ request when something is finished, not by pushing to it.
 
 ```
 data/        given by the course - READ ONLY, never edit or regenerate
-notebooks/   exploration + colab_bert_training.ipynb (needs a GPU)
+notebooks/   01 explore, 02 SVM + MLP, 03 DistilBERT - see notebooks/README.md
 src/         the pipeline scripts
 results/     generated output only - never hand-edit, re-run the script instead
 report/      the brief and the report outline
@@ -122,6 +132,8 @@ python src/load_data.py       # sanity check - prints dataset sizes
 python src/run_baseline.py    # TF-IDF + LogReg, writes results/submission.csv
 python src/error_analysis.py  # right/wrong examples for report question (e)
 python src/make_architecture_figure.py   # fig06, the architecture figure for (b)
+python src/compare_models.py             # all TF-IDF models on one split -> (c), (f)
+python src/make_comparison_figures.py    # fig07 confusion matrices, fig08 comparison
 ```
 
 ## Things that matter when working on this
@@ -133,8 +145,14 @@ positive). Always guessing "positive" scores ~85% accuracy while being useless, 
 **`test.json` has no labels.** Test accuracy cannot be measured locally. That is why
 the code holds out 20% of `train.json` as a validation split, stratified.
 
-**Current baseline to beat:** TF-IDF (1-2 grams, 20k features) + Logistic Regression
-= **0.9095 validation accuracy**. Any new model should be compared against this.
+**Current best:** DistilBERT at **0.9487** accuracy / **0.8951** macro F1, though on a
+15% split. The best strictly-comparable model is the **Linear SVM at 0.9325 / 0.8585**,
+which beats the 0.9095 logistic-regression baseline on the identical split while
+training in 0.11 s. Compare any new model against the SVM, not the baseline.
+
+**Negative-class recall is the real problem,** not accuracy. Every model is far weaker
+on the minority class: negative F1 runs 0.67 (MLP) to 0.76 (SVM) against 0.95-0.96
+positive. That gap is what questions (e) and (f) should be about.
 
 **Phase 1 findings** (from `notebooks/01_explore_data.ipynb`, 3 Oct 2026):
 
@@ -161,8 +179,10 @@ the code holds out 20% of `train.json` as a validation split, stratified.
 Keep it that way, or average over multiple runs instead.
 
 **BERT needs a GPU.** Fine-tuning DistilBERT is 30-60 min per epoch on CPU versus
-about 2 min on a free Colab T4. Use `notebooks/colab_bert_training.ipynb` in Colab.
-GitHub Codespaces has no GPU on the free plan.
+about 2 min on a free Colab T4. GitHub Codespaces has no GPU on the free plan.
+Ryan's trained model is `notebooks/03_distilbert.ipynb`;
+`notebooks/04_distilbert_20split.ipynb` re-runs it on the standard 20% split and
+has **not been run yet** - that is the one outstanding experiment.
 
 **Submission format:** two columns, `reviews` and `predictions`, matching
 `data/submission_example.csv`. 1,851 rows. Write CSVs with `lineterminator="\n"`
