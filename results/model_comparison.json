@@ -27,7 +27,7 @@
     "active_terms_per_review": 29.0,
     "sparse_mb": 2.09,
     "dense_mb_if_dense": 947.2,
-    "vectorize_seconds": 0.611
+    "vectorize_seconds": 0.387
   },
   "models": [
     {
@@ -51,7 +51,7 @@
         "fn": 90,
         "tp": 1174
       },
-      "train_seconds": 0.041,
+      "train_seconds": 0.042,
       "parameters": 20001,
       "config": {
         "C": 1.0,
@@ -82,7 +82,7 @@
         "fn": 37,
         "tp": 1227
       },
-      "train_seconds": 0.033,
+      "train_seconds": 0.032,
       "parameters": 20001,
       "config": {
         "C": 1.0,
@@ -113,7 +113,7 @@
         "fn": 42,
         "tp": 1222
       },
-      "train_seconds": 7.191,
+      "train_seconds": 10.538,
       "parameters": 4034049,
       "config": {
         "svd_components": 200,
@@ -132,16 +132,27 @@
       "why": "A non-linear control for the two linear models. An MLP cannot take 20,000 sparse inputs cheaply, so TruncatedSVD compresses them to 200 dense components first - which is itself the feature-format trade-off question (f) asks about."
     },
     {
-      "epoch": 4,
-      "epochs": 4,
-      "accuracy": 0.9487,
-      "macro_f1": 0.8951,
       "name": "DistilBERT (4 epochs, max_length=256)",
       "short": "DistilBERT",
       "owner": "Ryan",
-      "source": "notebooks/03_distilbert.ipynb (read from committed outputs)",
-      "test_size": 0.15,
-      "comparable": false,
+      "source": "notebooks/04_distilbert_20split.ipynb",
+      "test_size": 0.2,
+      "accuracy": 0.9446320054017556,
+      "macro_f1": 0.8893115994866709,
+      "negative_precision": 0.8110599078341014,
+      "negative_recall": 0.8110599078341014,
+      "negative_f1": 0.8110599078341014,
+      "positive_precision": 0.9675632911392406,
+      "positive_recall": 0.9675632911392406,
+      "positive_f1": 0.9675632911392406,
+      "confusion_matrix": {
+        "tn": 176,
+        "fp": 41,
+        "fn": 41,
+        "tp": 1223
+      },
+      "train_seconds": 531.7,
+      "parameters": 66955010,
       "config": {
         "model": "distilbert-base-uncased",
         "max_length": 256,
@@ -149,12 +160,14 @@
         "epochs": 4,
         "learning_rate": 2e-05,
         "weight_decay": 0.01,
-        "warmup": "10% of total steps"
+        "warmup": "10% of total steps",
+        "device": "Tesla T4",
+        "peak_gpu_memory_gb": 2.21,
+        "best_epoch": 4
       },
-      "why": "Contextual subword embeddings instead of a bag of words, so negation and word order survive. The cost is a GPU and roughly 66M parameters, against 20,001 for the linear models.",
-      "note": "Validated on a 15% split, not 20% - NOT directly comparable to the rows above. Run notebooks/04_distilbert_20split.ipynb to fix.",
-      "parameters": null
+      "why": "Contextual subword embeddings instead of a bag of words, so negation and word order survive, at far higher parameter and compute cost.",
+      "comparable": true
     }
   ],
-  "best_comparable": "TF-IDF + Linear SVM"
+  "best_comparable": "DistilBERT (4 epochs, max_length=256)"
 }
