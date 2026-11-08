@@ -8,7 +8,8 @@ to re-run it reliably, move it into `src/` as a script.
 | `01_explore_data.ipynb` | Joshua | Phase 1 - class balance, review lengths, vocabulary. Writes `results/figures/fig01` - `fig05` | anywhere (CPU, ~15 s) |
 | `02_svm_mlp.ipynb` | Jayce | Linear SVM and a two-hidden-layer MLP on the same TF-IDF features. Writes `results/part_b/` | anywhere (CPU, ~10 s) |
 | `03_distilbert.ipynb` | Ryan | Fine-tunes DistilBERT end to end and writes `results/submission_distilbert.csv` | CPU works but is slow; a T4 GPU is much faster |
-| `04_distilbert_20split.ipynb` | Ryan | **Not run yet.** The same DistilBERT at `test_size=0.2`, so it lands on the split the other three share. Writes `results/distilbert_metrics.json` | **Google Colab with a T4 GPU** |
+| `04_distilbert_20split.ipynb` | Ryan | **Superseded by `05`.** The same DistilBERT at `test_size=0.2`; run once on a T4 (0.9446 / 0.8893) | Google Colab, GPU |
+| `05_distilbert_tuning.ipynb` | Joshua | **The final DistilBERT.** Tuning runs for question (c) (class weights, learning rate, threshold, seeds) and the submitted `results/submission.csv` | **Google Colab with a GPU** (L4, about 4 min per run) |
 | `tfidf_features_example.ipynb` | course | Provided by the course - how to turn raw review text into TF-IDF features | anywhere (CPU) |
 | `colab_bert_training.ipynb` | Joshua | **Superseded by `03_distilbert.ipynb`.** A Colab DistilBERT notebook with no saved outputs; `03_distilbert.ipynb` is the run the report uses | Google Colab, T4 GPU |
 
@@ -21,11 +22,12 @@ This matters for any table that puts these models side by side:
 | `src/run_baseline.py` | stratified **80/20** | 42 |
 | `02_svm_mlp.ipynb` | stratified **80/20** | 42 |
 | `03_distilbert.ipynb` | stratified **85/15** | 42 |
+| `04_distilbert_20split.ipynb`, `05_distilbert_tuning.ipynb` | stratified **80/20** | 42 (05 also 1, 2) |
 
 The baseline, the SVM and the MLP all score on the *same* 1,481-review validation
-split, so those three are directly comparable. DistilBERT used a 15% split, so its
-0.9487 is measured on different reviews and is **not** strictly comparable to the
-other three. `notebooks/04_distilbert_20split.ipynb` exists to close that gap.
+split, so those three are directly comparable. Only `03_distilbert.ipynb` used a 15% split, so its
+0.9487 is **not** strictly comparable. `04` and `05` use the shared 20% split, and `05`
+is the DistilBERT the report uses.
 
 ## Running the Colab notebooks
 

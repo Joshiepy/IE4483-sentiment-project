@@ -28,14 +28,23 @@ seed 42:
 | TF-IDF + Logistic Regression | `src/run_baseline.py` | Joshua | 0.9095 | 0.83 | 80/20 |
 | Linear SVM | `notebooks/02_svm_mlp.ipynb` | Jayce | **0.9325** | **0.8579** | 80/20 |
 | MLP (TF-IDF + SVD 200, 128-64) | `notebooks/02_svm_mlp.ipynb` | Jayce | 0.9095 | 0.7995 | 80/20 |
-| DistilBERT, 4 epochs | `notebooks/04_distilbert_20split.ipynb` | Ryan | **0.9446** | **0.8893** | 80/20 |
+| DistilBERT, lr 2e-5, seed 42 | `notebooks/05_distilbert_tuning.ipynb` | Ryan | **0.9507** | **0.9001** | 80/20 |
 
 All four share the *same* 1,481-review validation split and are directly
-comparable (`results/model_comparison.csv`). DistilBERT is the best model:
-negative F1 0.811 against 0.755 for the SVM, finding 176 of 217 negatives.
-It trained in 532 s on a Colab T4 (2.21 GB peak GPU memory, 66,955,010 parameters).
-Ryan's original run, `notebooks/03_distilbert.ipynb`, scored 0.9487 / 0.8951 on an
-85/15 split - superseded, do not quote it as the headline number.
+comparable (`results/model_comparison.csv`). DistilBERT is the final, submitted
+model: negative F1 0.829 against 0.755 for the SVM, finding 177 of 217 negatives.
+Best checkpoint at epoch 2; trained in 227.8 s on a Colab NVIDIA L4 (2.49 GB peak GPU
+memory, 66,955,010 parameters). Over seeds 42, 1, 2 it scores **0.8986 ± 0.0089** macro F1.
+
+**DistilBERT tuning (question c), 8 Nov 2026** - `results/distilbert_tuning/tuning_results.csv`:
+class-weighted loss 0.8891 (worse: more negatives found, lower precision); lr 3e-5 0.9005
+and 5e-5 0.9016 with seed 42; over 3 seeds 5e-5 averages 0.8943 ± 0.0063, below 2e-5, and
+the gap is inside seed noise, so 2e-5 stays. Moving the threshold off 0.5 changes macro F1
+by < 0.01 for 0.30-0.70, so 0.5 stays.
+
+Superseded DistilBERT runs - do not quote as the headline: `03_distilbert.ipynb`
+(0.9487 / 0.8951, 85/15 split) and `04_distilbert_20split.ipynb` (0.9446 / 0.8893, same
+settings and seed on a T4 - the gap to 0.9001 is GPU and batch-order variation).
 
 **Questions (e) and (f) compare DistilBERT against the Linear SVM** - the submitted
 model against the best TF-IDF model. LogReg stays as the baseline and the MLP as
@@ -64,12 +73,12 @@ easiest to lose marks on.
 
 | Q | Section | Marks | Status |
 |---|---|---|---|
-| (a) | Feature format + preprocessing | 10% | figures placed, prose to write |
-| (b) | Model description + architecture figure + code | 20% | figure placed, prose to write |
-| (c) | Hyperparameters + justification | 10% | all four configs recorded, prose to write |
-| (d) | Test predictions + `submission.csv` | 20% | numbers measured, prose to write |
-| (e) | Error analysis, 1-2 cases | 10% | written for LogReg; redo as DistilBERT vs SVM (`src/svm_val_predictions.py`) |
-| (f) | Feature format vs resources and accuracy | 10% | written; update DistilBERT to the 20% numbers, centre on DistilBERT vs SVM |
+| (a) | Feature format + preprocessing | 10% | **written** |
+| (b) | Model description + architecture figure + code | 20% | **written**; DistilBERT figure is `fig09` |
+| (c) | Hyperparameters + justification | 10% | **written**, incl. the DistilBERT tuning table |
+| (d) | Test predictions + `submission.csv` | 20% | **written**; `submission.csv` = final DistilBERT |
+| (e) | Error analysis, 1-2 cases | 10% | **written** as DistilBERT vs SVM |
+| (f) | Feature format vs resources and accuracy | 10% | **written** |
 | (g) | Hotel reviews, no rating scores | 10% | **written** |
 | (h) | Hotel reviews, noisy rating scores | 10% | **written** |
 
@@ -153,10 +162,11 @@ positive). Always guessing "positive" scores ~85% accuracy while being useless, 
 **`test.json` has no labels.** Test accuracy cannot be measured locally. That is why
 the code holds out 20% of `train.json` as a validation split, stratified.
 
-**Current best:** DistilBERT at **0.9446** accuracy / **0.8893** macro F1 on the shared
-20% split. The best TF-IDF model is the **Linear SVM at 0.9325 / 0.8579**, which trains
-in 0.03 s against DistilBERT's 532 s on a GPU. Compare any new model against these two,
-not the baseline.
+**Current best:** DistilBERT at **0.9507** accuracy / **0.9001** macro F1 on the shared
+20% split (0.8986 ± 0.0089 over three seeds). The best TF-IDF model is the **Linear SVM
+at 0.9325 / 0.8579**, which trains in about 0.1 s on a CPU against DistilBERT's 228 s on
+a GPU. Compare any new model against these two, not the baseline. DistilBERT varies by
+about ±0.01 macro F1 between seeds, so a gain smaller than that is not a real gain.
 
 **The chosen TF-IDF settings are not quite optimal, and that is recorded on purpose.**
 `src/tune_hyperparameters.py` shows `sublinear_tf=True` (+0.0143) and `C=10` (+0.0135)
@@ -168,12 +178,15 @@ this without re-running the whole comparison. `class_weight="balanced"` is the o
 setting that matters enormously: removing it costs 0.1726 macro F1.
 
 **Negative-class recall is the real problem,** not accuracy. Every model is far weaker
-on the minority class: negative F1 runs 0.65 (MLP) to 0.81 (DistilBERT) against
+on the minority class: negative F1 runs 0.65 (MLP) to 0.83 (DistilBERT) against
 0.95-0.97 positive. That gap is what questions (e) and (f) should be about.
 
-**The Linear SVM gets all four reviews quoted in the report's Section 6 wrong**, the
-same as LogReg (`python src/svm_val_predictions.py`). Cases 1 and 1b read positive
-but are labelled negative - likely label noise.
+**Error analysis (e), DistilBERT vs SVM on the validation split:** both right 1,341,
+both wrong 33, only DistilBERT right 67 (25 of them negative reviews with a negation),
+only the SVM right 40. The report's Case 1 is "Not Happy at all with these slippers..."
+(SVM +0.80 because `not` is a stop word; DistilBERT P(positive) 0.010). Case 2, the
+"took them weeks... Bad customer service" review, fools both. "Dilvered quickly..." is
+predicted positive by both and is likely a wrong label.
 
 **Phase 1 findings** (from `notebooks/01_explore_data.ipynb`, 3 Oct 2026):
 
@@ -184,7 +197,7 @@ but are labelled negative - likely label noise.
   so copies straddle the 80/20 split and validation accuracy is mildly optimistic. We are
   **not** de-duplicating - that would move the baseline everyone is comparing against.
   Mention it in the report instead.
-- **87 reviews appear in both `train.json` and `test.json`** (~4.7% of the test set). A
+- **101 test rows (5.5%) also appear in `train.json`**, covering 87 distinct texts. A
   property of the given data; `data/` is read-only. Worth one honest sentence in (d).
 - **Stop-word removal invents bigrams.** `lower problems` ranks as the 2nd strongest
   negative term but nobody wrote it - it is "lower back problems" with the stop word
@@ -200,14 +213,12 @@ but are labelled negative - likely label noise.
 Keep it that way, or average over multiple runs instead.
 
 **BERT needs a GPU.** Fine-tuning DistilBERT is 30-60 min per epoch on CPU versus
-about 2 min on a free Colab T4. GitHub Codespaces has no GPU on the free plan.
-`notebooks/04_distilbert_20split.ipynb` was run on Colab on 8 Nov 2026 and produced
-`results/distilbert_metrics.json` and `results/submission_distilbert_20split.csv`.
-That run used the notebook's earlier version, so the per-epoch history, the
-validation and test probabilities and the three `distilbert_*.png` figures it now
-writes **still need one more Colab run** (same training, same scores). Copy the
-downloaded zip's contents into `results/`, then run `src/svm_val_predictions.py`
-for the side-by-side DistilBERT vs SVM error analysis.
+about 1 min on a Colab L4. GitHub Codespaces has no GPU on the free plan.
+`notebooks/05_distilbert_tuning.ipynb` is the final DistilBERT work (Colab, NVIDIA L4,
+8 Nov 2026): every tuning run, `results/distilbert_tuning/`, the per-review
+`results/distilbert_val_predictions.csv` and `distilbert_test_probabilities.csv`, and
+`results/submission.csv`. Upload `train.json` and `test.json` to Colab's Files panel
+first; the repo is private, so it cannot be cloned there.
 
 **Submission format:** two columns, `reviews` and `predictions`, matching
 `data/submission_example.csv`. 1,851 rows. Write CSVs with `lineterminator="\n"`

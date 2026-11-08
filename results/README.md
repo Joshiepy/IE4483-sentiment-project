@@ -5,14 +5,19 @@ Re-run the script instead.
 
 | File | Produced by |
 |------|-------------|
-| `submission.csv` | `python src/run_baseline.py` |
+| `submission.csv` | **the file to submit** - final DistilBERT, `notebooks/05_distilbert_tuning.ipynb` |
+| `submission_distilbert_20split.csv` | superseded DistilBERT run, `notebooks/04_distilbert_20split.ipynb` |
 | `submission_distilbert.csv` | `notebooks/03_distilbert.ipynb` (Ryan) |
 | `figures/fig01` - `fig05` | `notebooks/01_explore_data.ipynb` |
 | `figures/fig06_architecture.png` | `python src/make_architecture_figure.py` |
 | `model_comparison.csv` / `.json` | `python src/compare_models.py` |
 | `hyperparameter_search.csv` | `python src/tune_hyperparameters.py` |
 | `figures/fig07` - `fig08` | `python src/make_comparison_figures.py` |
-| `distilbert_metrics.json` | `notebooks/04_distilbert_20split.ipynb` (not run yet) |
+| `distilbert_metrics.json` | final DistilBERT run, from `results/distilbert_tuning/` |
+| `distilbert_tuning/` | `notebooks/05_distilbert_tuning.ipynb` - tuning table and per-epoch history |
+| `distilbert_val_predictions.csv`, `distilbert_test_probabilities.csv` | `notebooks/05_distilbert_tuning.ipynb` |
+| `svm_val_predictions.csv` | `python src/svm_val_predictions.py` |
+| `figures/fig09_distilbert_architecture.png` | `python src/make_distilbert_architecture.py` |
 
 ## Figures
 
@@ -28,6 +33,7 @@ Re-run the script instead.
 | `fig06_architecture.png` | the TF-IDF + LogReg pipeline, dimensions at each stage | (b) |
 | `fig07_confusion_matrices.png` | where each model's errors fall, normalised per true class | (e), (f) |
 | `fig08_model_comparison.png` | per-class F1 and macro F1 against the majority-class floor | (c), (f) |
+| `fig09_distilbert_architecture.png` | DistilBERT layers and output shapes | (b) |
 
 ## The model comparison
 
@@ -38,18 +44,19 @@ vocabulary, so the rows differ only by classifier:
 
 | Model | Accuracy | Macro F1 | Negative F1 | Train time | Parameters |
 |---|---|---|---|---|---|
-| TF-IDF + Logistic Regression | 0.9095 | 0.8334 | 0.7208 | 0.04 s | 20,001 |
-| **TF-IDF + Linear SVM** | **0.9325** | **0.8579** | **0.7549** | 0.03 s | 20,001 |
-| TF-IDF + SVD(200) + MLP(128,64) | 0.9095 | 0.7995 | 0.6510 | 7.19 s | 4,034,049 |
-| DistilBERT *(15% split)* | 0.9487 | 0.8951 | not recorded | not recorded | ~66M |
+| TF-IDF + Logistic Regression | 0.9095 | 0.8334 | 0.7208 | 0.17 s | 20,001 |
+| TF-IDF + Linear SVM | 0.9325 | 0.8579 | 0.7549 | 0.10 s | 20,001 |
+| TF-IDF + SVD(200) + MLP(128,64) | 0.9095 | 0.7995 | 0.6510 | 7.8 s | 4,034,049 |
+| **DistilBERT** (lr 2e-5, seed 42) | **0.9507** | **0.9001** | **0.8290** | 227.8 s (L4 GPU) | 66,955,010 |
+
+CPU timings vary between runs. DistilBERT over seeds 42, 1, 2: 0.8986 ± 0.0089 macro F1.
 
 Two things to carry into the report:
 
-1. **Linear SVM is the best strictly comparable model**, and it trains in 0.03 s.
-   DistilBERT scores higher but on a different split - run
-   `notebooks/04_distilbert_20split.ipynb` to make that row honest.
+1. **DistilBERT is the best model and is the one submitted.** The Linear SVM is the
+   best TF-IDF model and trains in about 0.1 s on a CPU.
 2. **The weak spot is the negative class, not accuracy.** Negative F1 runs
-   0.65-0.75 against 0.95-0.96 positive, and predicting "positive" for every
+   0.65-0.83 against 0.95-0.97 positive, and predicting "positive" for every
    review already scores 0.853 accuracy. Macro F1 is the number to quote.
 
 The MLP figures here differ slightly from the ones printed in
@@ -57,20 +64,17 @@ The MLP figures here differ slightly from the ones printed in
 0.0006. The cause was not isolated. The numbers in this table are the ones to
 cite, because they come from the single shared run.
 
-## The two submission files
+## The submission files
 
-Both have the same shape: columns `reviews`, `predictions` (0 = negative,
+All have the same shape: columns `reviews`, `predictions` (0 = negative,
 1 = positive), 1851 rows, in the same order as `data/test.json`.
 
 | File | Model | Validation | Positive rate |
 |---|---|---|---|
-| `submission.csv` | TF-IDF + Logistic Regression | 0.9095 acc, 0.83 macro F1 | 1512 / 1851 (81.7%) |
-| `submission_distilbert.csv` | DistilBERT, 4 epochs, `max_length=256` | 0.9487 acc, 0.8951 macro F1 | 1598 / 1851 (86.3%) |
+| **`submission.csv`** | **DistilBERT, lr 2e-5, seed 42 (final)** | 0.9507 acc, 0.9001 macro F1 | 1613 / 1851 (87.1%) |
+| `submission_distilbert_20split.csv` | DistilBERT, same settings, earlier T4 run | 0.9446 acc, 0.8893 macro F1 | 1591 / 1851 (86.0%) |
+| `submission_distilbert.csv` | DistilBERT, 15% split | 0.9487 acc, 0.8951 macro F1 (15% split) | 1598 / 1851 (86.3%) |
 
-**Which one goes to NTULearn is still open.** DistilBERT is the stronger model on the
-validation split, but only one `submission.csv` can be submitted - agree as a group,
-then copy the chosen file over `submission.csv` in the final commit.
-
-One caveat before using that comparison in the report: DistilBERT was validated on a
-**15%** split and everything else on **20%**, so the two columns are not strictly
-comparable. See `notebooks/README.md`.
+**`submission.csv` is the file that goes to NTULearn.** `python src/run_baseline.py`
+overwrites it with the logistic regression baseline - do not run it before submitting,
+or copy `notebooks/05_distilbert_tuning.ipynb`'s output back afterwards.
