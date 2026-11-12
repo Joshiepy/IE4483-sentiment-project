@@ -6,8 +6,10 @@ Re-run the script instead.
 | File | Produced by |
 |------|-------------|
 | `submission.csv` | **the file to submit** - final DistilBERT, `notebooks/05_distilbert_tuning.ipynb` |
+| `submission_baseline.csv` | `python src/run_baseline.py` - logistic regression baseline (not submitted) |
 | `submission_distilbert_20split.csv` | superseded DistilBERT run, `notebooks/04_distilbert_20split.ipynb` |
-| `submission_distilbert.csv` | `notebooks/03_distilbert.ipynb` (Ryan) |
+| `cleaned_train.csv`, `cleaned_val.csv` | `notebooks/02_svm_mlp.ipynb` section 2b - raw review, cleaned review and label for the training and validation halves; the exact text SVM and MLP are trained on |
+| `part_b/` | `notebooks/02_svm_mlp.ipynb` - SVM/MLP metrics and config |
 | `figures/fig01` - `fig05` | `notebooks/01_explore_data.ipynb` |
 | `figures/fig06_architecture.png` | `python src/make_architecture_figure.py` |
 | `model_comparison.csv` / `.json` | `python src/compare_models.py` |
@@ -59,10 +61,11 @@ Two things to carry into the report:
    0.65-0.83 against 0.95-0.97 positive, and predicting "positive" for every
    review already scores 0.853 accuracy. Macro F1 is the number to quote.
 
-The MLP figures here differ slightly from the ones printed in
-`notebooks/02_svm_mlp.ipynb` (0.7995 vs 0.8078 macro F1), and the SVM differs by
-0.0006. The cause was not isolated. The numbers in this table are the ones to
-cite, because they come from the single shared run.
+**Library-version note.** The report quotes the SVM and MLP numbers saved in
+`notebooks/02_svm_mlp.ipynb` (SVM 0.9325 / 0.8585, MLP 0.9115 / 0.8078), from the
+original run (Python 3.12.7, Anaconda). The table above, and a fresh re-run of that same
+notebook with scikit-learn 1.9.0, give SVM 0.8579 and MLP 0.9095 / 0.7995. Code and
+settings are identical; the difference comes from the scikit-learn version.
 
 ## The submission files
 
@@ -73,8 +76,11 @@ All have the same shape: columns `reviews`, `predictions` (0 = negative,
 |---|---|---|---|
 | **`submission.csv`** | **DistilBERT, lr 2e-5, seed 42 (final)** | 0.9507 acc, 0.9001 macro F1 | 1613 / 1851 (87.1%) |
 | `submission_distilbert_20split.csv` | DistilBERT, same settings, earlier T4 run | 0.9446 acc, 0.8893 macro F1 | 1591 / 1851 (86.0%) |
-| `submission_distilbert.csv` | DistilBERT, 15% split | 0.9487 acc, 0.8951 macro F1 (15% split) | 1598 / 1851 (86.3%) |
+| `submission_baseline.csv` | TF-IDF + Logistic Regression | 0.9095 acc, 0.8334 macro F1 | 1512 / 1851 (81.7%) |
 
-**`submission.csv` is the file that goes to NTULearn.** `python src/run_baseline.py`
-overwrites it with the logistic regression baseline - do not run it before submitting,
-or copy `notebooks/05_distilbert_tuning.ipynb`'s output back afterwards.
+The 15%-split DistilBERT predictions (0.9487 / 0.8951, 1598 positive) are in
+`archive/submission_distilbert_15split.csv` and are not used.
+
+**`submission.csv` is the file that goes to NTULearn** - the final DistilBERT
+(`notebooks/05_distilbert_tuning.ipynb`, run `baseline`). No script in `src/` writes to
+it. Check it with `python src/check_submission.py results/submission.csv`.

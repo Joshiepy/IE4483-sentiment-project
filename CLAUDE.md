@@ -42,7 +42,7 @@ and 5e-5 0.9016 with seed 42; over 3 seeds 5e-5 averages 0.8943 ± 0.0063, below
 the gap is inside seed noise, so 2e-5 stays. Moving the threshold off 0.5 changes macro F1
 by < 0.01 for 0.30-0.70, so 0.5 stays.
 
-Superseded DistilBERT runs - do not quote as the headline: `03_distilbert.ipynb`
+Superseded DistilBERT runs - do not quote as the headline: `archive/03_distilbert_15split.ipynb`
 (0.9487 / 0.8951, 85/15 split) and `04_distilbert_20split.ipynb` (0.9446 / 0.8893, same
 settings and seed on a T4 - the gap to 0.9001 is GPU and batch-order variation).
 
@@ -134,7 +134,8 @@ request when something is finished, not by pushing to it.
 
 ```
 data/        given by the course - READ ONLY, never edit or regenerate
-notebooks/   01 explore, 02 SVM + MLP, 03 DistilBERT - see notebooks/README.md
+notebooks/   01 explore, 02 SVM + MLP, 04/05 DistilBERT - see notebooks/README.md
+archive/     superseded runs (15%-split DistilBERT), not used in the report
 src/         the pipeline scripts
 results/     generated output only - never hand-edit, re-run the script instead
 report/      the brief and the report outline
@@ -144,7 +145,8 @@ report/      the brief and the report outline
 
 ```bash
 python src/load_data.py       # sanity check - prints dataset sizes
-python src/run_baseline.py    # TF-IDF + LogReg, writes results/submission.csv
+python src/run_baseline.py    # TF-IDF + LogReg, writes results/submission_baseline.csv
+python src/check_submission.py results/submission.csv   # format check of the final file
 python src/error_analysis.py  # right/wrong examples for report question (e)
 python src/make_architecture_figure.py   # fig06, the architecture figure for (b)
 python src/compare_models.py             # all TF-IDF models on one split -> (c), (f)

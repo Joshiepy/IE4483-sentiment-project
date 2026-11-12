@@ -14,10 +14,11 @@ Classify product reviews as **positive (1)** or **negative (0)**.
 ```
 IE4483-project/
 ├── data/          Data given by the course (do not edit these)
-├── notebooks/     Jupyter notebooks - exploring, and the Colab GPU training
-├── src/           Python code that actually runs the pipeline
-├── results/       Things the code produces (submission.csv, plots)
-├── report/        The project brief + the report we write
+├── notebooks/     01 explore, 02 SVM + MLP, 04/05 DistilBERT (Colab GPU)
+├── src/           Python scripts: data loading, baseline, checks, figures
+├── results/       Everything the code produces - submission.csv is the final answer
+├── archive/       Superseded early runs, kept for the record (not used in the report)
+├── report/        The project brief + report outline
 ├── .devcontainer/ Config so GitHub Codespaces sets itself up automatically
 └── requirements.txt
 ```
@@ -27,23 +28,82 @@ Nothing in `results/` is hand-edited — if it's wrong, fix the code and re-run.
 
 ---
 
-## Setup
+## For the marker: how to reproduce everything
+
+**The submitted file is `results/submission.csv`** - final DistilBERT predictions,
+1,851 rows, 1,613 positive / 238 negative.
+
+### 1. Setup (CPU parts, any machine)
 
 ```bash
-# from the project folder
+# from the repo root
 python -m venv .venv
 .venv\Scripts\activate         # Windows (PowerShell / cmd)
 # source .venv/bin/activate    # macOS / Linux
-
 pip install -r requirements.txt
 ```
 
-## How to run
+### 2. Run, in this order
+
+| Step | Command / notebook | What it does | Output |
+|---|---|---|---|
+| 1 | `python src/load_data.py` | Data sanity check: sizes, label balance, a sample | printed |
+| 2 | `python src/run_baseline.py` | TF-IDF + Logistic Regression baseline | `results/submission_baseline.csv` |
+| 3 | `notebooks/02_svm_mlp.ipynb` (Jupyter, run top to bottom) | **Shows the cleaned data**, then trains Linear SVM and MLP on it | `results/cleaned_train.csv`, `results/cleaned_val.csv`, `results/part_b/` |
+| 4 | `notebooks/05_distilbert_tuning.ipynb` on **Google Colab with a GPU** | Final DistilBERT: tuning runs + the submitted predictions | `submission.csv` + tuning results (downloaded as a zip) |
+| 5 | `python src/check_submission.py results/submission.csv` | Checks the submission format against `data/test.json` and `data/submission_example.csv` | PASS/FAIL per check |
+| 6 | `python src/error_analysis.py` | Right/wrong examples used in report Section 6 | printed |
+
+**Running the DistilBERT notebook on Colab:** open
+[colab.research.google.com](https://colab.research.google.com) -> `File` -> `Upload notebook` ->
+`notebooks/05_distilbert_tuning.ipynb`; `Runtime` -> `Change runtime type` -> **GPU**; upload
+`data/train.json` and `data/test.json` to the Colab Files panel; run all cells. The final model
+is the run named `baseline` (lr 2e-5, seed 42); step 5 of the notebook writes its `submission.csv`.
+About 4 minutes per run on an L4; on CPU it would take hours.
+
+### 3. Which file produces which result
+
+All models use the same stratified 80/20 split of `train.json` (`random_state=42`):
+5,920 training and 1,481 validation reviews (217 negative, 1,264 positive).
+TF-IDF settings (all three classical models): `lowercase=True, stop_words="english",
+ngram_range=(1, 2), min_df=2, max_features=20000`, fitted on the training split only.
+
+| Model | Produced by | Val. accuracy | Macro F1 | Confusion matrix [[TN, FP], [FN, TP]] |
+|---|---|---|---|---|
+| TF-IDF + Logistic Regression | `src/run_baseline.py` | 0.9095 | 0.8334 | [[173, 44], [90, 1174]] |
+| TF-IDF + Linear SVM (C=1) | `notebooks/02_svm_mlp.ipynb` | 0.9325 | 0.8585* | [[154, 63], [37, 1227]] |
+| TF-IDF + SVD(200) + MLP(128, 64) | `notebooks/02_svm_mlp.ipynb` | 0.9115* | 0.8078* | [[131, 86], [45, 1219]] |
+| **DistilBERT (final, submitted)** | `notebooks/05_distilbert_tuning.ipynb` | **0.9507** | **0.9001** | [[177, 40], [33, 1231]] |
+
+DistilBERT: `distilbert-base-uncased`, `max_length=256`, batch 16, 4 epochs, AdamW lr 2e-5,
+weight decay 0.01, 10% linear warm-up then linear decay, gradient clipping 1.0, best
+checkpoint by validation macro F1 (epoch 2). NVIDIA L4, 227.8 s. Results in
+`results/distilbert_tuning/tuning_results.csv` (row `baseline`).
+
+\* **Library-version note.** The SVM and MLP numbers marked * are the outputs saved in
+`notebooks/02_svm_mlp.ipynb` from the run quoted in the report (Python 3.12.7, Anaconda).
+Re-running the same notebook with a newer scikit-learn (tested: 1.9.0, Python 3.13) gives
+SVM 0.9325 / 0.8579 and MLP 0.9095 / 0.7995, the same as `src/compare_models.py`. The code
+and settings are identical; the small difference comes from the library version. The
+logistic regression and DistilBERT numbers are not affected.
+
+### 4. Reproducibility
+
+**Every random seed is 42**: the train/validation split, every scikit-learn model
+(`random_state=42`), and for DistilBERT Python, NumPy and PyTorch seeds plus deterministic
+cuDNN. GPU training can still vary slightly between GPU types (a T4 run of the same notebook
+scored 0.8893 macro F1, see `notebooks/04_distilbert_20split.ipynb`), which is why the report
+also gives a three-seed mean.
+
+### Other scripts (figures and tables in the report)
 
 ```bash
-python src/load_data.py       # sanity check: prints dataset sizes and a sample
-python src/run_baseline.py    # trains the baseline, writes results/submission.csv
-python src/error_analysis.py  # prints right/wrong examples for report question (e)
+python src/compare_models.py             # all models on one split -> results/model_comparison.*
+python src/tune_hyperparameters.py       # LogReg + SVM one-at-a-time sweeps -> results/hyperparameter_search.csv
+python src/make_comparison_figures.py    # fig07 confusion matrices, fig08 comparison
+python src/make_architecture_figure.py   # fig06
+python src/make_distilbert_architecture.py  # fig09
+python src/svm_val_predictions.py        # SVM per-review output for the error analysis
 ```
 
 ---
@@ -67,79 +127,20 @@ format: two columns, `reviews` and `predictions`. Our output matches it.
 
 ---
 
-## Current baseline result
+## Where to run this
 
-TF-IDF (unigrams + bigrams, 20k features) + Logistic Regression:
-
-| Metric | Score |
-|--------|-------|
-| Validation accuracy | **0.9095** |
-| Negative F1 | 0.72 |
-| Positive F1 | 0.95 |
-
-The brief *encourages a neural model* (RNN or a pretrained model like BERT), so this
-baseline is the number to beat — and a useful comparison point for report question (f).
-
----
-
-## Suggested plan
-
-1. ~~Get data loading + a working baseline~~ ✅ done
-2. Explore the data in a notebook (review lengths, common words, class balance)
-3. Build the main model — RNN+linear layer, or fine-tune a small BERT
-4. Tune hyperparameters (learning rate, feature dim) — **write down what you tried**,
-   question (c) asks you to justify these choices
-5. Run `error_analysis.py` and pick 1–2 cases for question (e)
-6. Write the report using `report/report-outline.md`
-7. Submit the report + `results/submission.csv`
-
----
-
-## Where to run this — laptop, Codespaces, or Colab?
-
-Three places you can run the code. You will probably use all three.
-
-| | Setup effort | GPU? | Good for |
-|---|---|---|---|
-| **Your laptop** (VS Code) | one-time install | no | writing code, the TF-IDF baseline |
-| **GitHub Codespaces** | zero — opens in the browser | **no** | teammates with slow laptops, quick edits anywhere |
-| **Google Colab** | zero | **yes, free T4** | fine-tuning BERT |
-
-### Do we need Colab?
-
-Only for the heavy model. Rough timings on this dataset:
-
-| Model | On CPU | On a Colab GPU |
+| | GPU? | Good for |
 |---|---|---|
-| TF-IDF + Logistic Regression | ~5 seconds | not needed |
-| LSTM / RNN from scratch | ~5–15 min | ~1 min |
-| **Fine-tuning DistilBERT** | **30–60 min per epoch** | **~2 min per epoch** |
+| **Your laptop** | no | everything except DistilBERT (all CPU parts take seconds) |
+| **GitHub Codespaces** (`Code` -> `Codespaces`) | no | same as laptop, nothing to install |
+| **Google Colab** | **yes** | DistilBERT: 30-60 min per epoch on CPU vs about 1 min on a GPU |
 
-So: run the baseline anywhere, but do the BERT training in Colab.
-**Codespaces has no GPU on the free plan**, so it is not a substitute for Colab here.
-
-### Opening a Codespace
-On the GitHub repo page: `Code` → `Codespaces` → `Create codespace on main`.
-It reads `.devcontainer/devcontainer.json`, installs `requirements.txt` automatically,
-and gives you VS Code in the browser. Free personal accounts get 60 hours/month —
-**stop the codespace when you are done** or it eats your quota.
-
-### Running the BERT model on Colab
-1. Go to [colab.research.google.com](https://colab.research.google.com)
-2. `File` → `Upload notebook` → pick `notebooks/colab_bert_training.ipynb`
-   (or `File` → `Open notebook` → `GitHub` tab and paste the repo URL)
-3. **`Runtime` → `Change runtime type` → T4 GPU** ← easy to forget, and it is the whole point
-4. Run the cells top to bottom. The first cell checks the GPU is really there.
-5. It downloads `submission.csv` at the end — commit that into `results/`.
-
-Colab deletes everything when the session closes, so **copy your validation numbers
-into the report before you close the tab**.
+Colab deletes everything when the session closes, so download the results zip the
+notebook produces before closing the tab.
 
 ---
 
 ## Working as a group of three
-
-The repo is the shared source of truth. A simple workflow that avoids painful merge conflicts:
 
 ```bash
 git pull                       # always do this BEFORE you start working
@@ -149,18 +150,7 @@ git commit -m "what you did"
 git push
 ```
 
-Two tips that matter for a 3-person project:
-
-- **Split by file, not by line.** Agree who owns which script or notebook. Two people
-  editing the same notebook is the #1 source of horrible merge conflicts, because
-  notebooks store output cells as JSON.
-- **Never commit a trained model.** `.gitignore` already blocks `*.pt`, `*.pth` and
-  `models/` — they are hundreds of MB and GitHub will reject them.
-
-The report must list **each member's individual contribution**, so write down who did
-what as you go rather than reconstructing it the night before the deadline.
-
-## Reproducibility
-
-Every script fixes `RANDOM_SEED = 42`. The brief explicitly asks for this in
-question (b) — keep it that way, or average over multiple runs instead.
+- **Split by file, not by line.** Each notebook has one owner (see `notebooks/README.md`);
+  two people editing the same notebook produces unreadable JSON merge conflicts.
+- **Never commit a trained model.** `.gitignore` blocks `*.pt`, `*.pth`, `*.bin`,
+  `*.joblib` and `models/`.
