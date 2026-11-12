@@ -7,6 +7,15 @@ scikit-learn
 jupyter
 matplotlib
 
-# Optional - only if you go for the deep-learning model (RNN / BERT)
-# torch
-# transformers
+# Terminal charts - only src/explore_terminal.py needs this.
+# Pinned below 6.0: plotext 6.x is a rewrite with an incompatible API.
+plotext<6
+
+# Saving fitted models - notebooks/02_svm_mlp.ipynb writes a .joblib
+joblib
+
+# The DistilBERT model in notebooks/03_distilbert.ipynb. No longer optional:
+# it is a trained model in the report. On a GPU machine install the CUDA build
+# of torch instead, or just run that notebook in Colab, where both are present.
+torch
+transformers

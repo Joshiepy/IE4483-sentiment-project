@@ -1,0 +1,250 @@
+{
+  "seed": 42,
+  "split": "stratified 80/20",
+  "tfidf": {
+    "lowercase": true,
+    "stop_words": "english",
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 2,
+    "max_features": 20000
+  },
+  "features": {
+    "train_shape": [
+      5920,
+      20000
+    ],
+    "val_shape": [
+      1481,
+      20000
+    ],
+    "unigrams": 6120,
+    "bigrams": 13880,
+    "cap_reached": true,
+    "density_pct": 0.1452,
+    "active_terms_per_review": 29.0,
+    "sparse_mb": 2.09,
+    "dense_mb_if_dense": 947.2,
+    "vectorize_seconds": 1.413
+  },
+  "models": [
+    {
+      "name": "TF-IDF + Logistic Regression",
+      "short": "LogReg",
+      "owner": "Joshua",
+      "source": "src/run_baseline.py",
+      "test_size": 0.2,
+      "comparable": true,
+      "accuracy": 0.9095205941931127,
+      "macro_f1": 0.8334223072790761,
+      "negative_precision": 0.6577946768060836,
+      "negative_recall": 0.7972350230414746,
+      "negative_f1": 0.7208333333333333,
+      "positive_precision": 0.9638752052545156,
+      "positive_recall": 0.9287974683544303,
+      "positive_f1": 0.9460112812248187,
+      "confusion_matrix": {
+        "tn": 173,
+        "fp": 44,
+        "fn": 90,
+        "tp": 1174
+      },
+      "train_seconds": 0.169,
+      "parameters": 20001,
+      "config": {
+        "C": 1.0,
+        "penalty": "l2",
+        "class_weight": "balanced",
+        "max_iter": 1000
+      },
+      "why": "Linear, convex, and gives a calibrated probability per review, so the 0.50 threshold is meaningful and the coefficients are directly readable as evidence for question (e)."
+    },
+    {
+      "name": "TF-IDF + Linear SVM",
+      "short": "Linear SVM",
+      "owner": "Jayce",
+      "source": "notebooks/02_svm_mlp.ipynb",
+      "test_size": 0.2,
+      "comparable": true,
+      "accuracy": 0.9324780553679946,
+      "macro_f1": 0.857873846484561,
+      "negative_precision": 0.806282722513089,
+      "negative_recall": 0.7096774193548387,
+      "negative_f1": 0.7549019607843137,
+      "positive_precision": 0.9511627906976744,
+      "positive_recall": 0.9707278481012658,
+      "positive_f1": 0.9608457321848082,
+      "confusion_matrix": {
+        "tn": 154,
+        "fp": 63,
+        "fn": 37,
+        "tp": 1227
+      },
+      "train_seconds": 0.102,
+      "parameters": 20001,
+      "config": {
+        "C": 1.0,
+        "loss": "squared_hinge",
+        "class_weight": "balanced",
+        "max_iter": 5000
+      },
+      "why": "A max-margin boundary suits 20,000 sparse features with only 5,920 training rows: it depends on the support vectors rather than on every feature, so it is hard to overfit here."
+    },
+    {
+      "name": "TF-IDF + SVD(200) + MLP(128, 64)",
+      "short": "MLP",
+      "owner": "Jayce",
+      "source": "notebooks/02_svm_mlp.ipynb",
+      "test_size": 0.2,
+      "comparable": true,
+      "accuracy": 0.9095205941931127,
+      "macro_f1": 0.7995316944659943,
+      "negative_precision": 0.7485029940119761,
+      "negative_recall": 0.576036866359447,
+      "negative_f1": 0.6510416666666666,
+      "positive_precision": 0.9299847792998478,
+      "positive_recall": 0.9667721518987342,
+      "positive_f1": 0.948021722265322,
+      "confusion_matrix": {
+        "tn": 125,
+        "fp": 92,
+        "fn": 42,
+        "tp": 1222
+      },
+      "train_seconds": 7.82,
+      "parameters": 4034049,
+      "config": {
+        "svd_components": 200,
+        "hidden_layers": [
+          128,
+          64
+        ],
+        "activation": "relu",
+        "solver": "adam",
+        "alpha": 0.001,
+        "learning_rate_init": 0.001,
+        "batch_size": 64,
+        "early_stopping": true,
+        "max_iter": 150
+      },
+      "why": "A non-linear control for the two linear models. An MLP cannot take 20,000 sparse inputs cheaply, so TruncatedSVD compresses them to 200 dense components first - which is itself the feature-format trade-off question (f) asks about."
+    },
+    {
+      "name": "DistilBERT (4 epochs, max_length=256)",
+      "short": "DistilBERT",
+      "owner": "Ryan",
+      "source": "Colab tuning run, 8 Nov 2026 (run \"baseline\": lr 2e-5, seed 42)",
+      "test_size": 0.2,
+      "accuracy": 0.950708980418636,
+      "macro_f1": 0.9001214842324552,
+      "negative_precision": 0.8428571428571429,
+      "negative_recall": 0.815668202764977,
+      "negative_f1": 0.8290398126463701,
+      "positive_precision": 0.96852871754524,
+      "positive_recall": 0.9738924050632912,
+      "positive_f1": 0.9712031558185404,
+      "confusion_matrix": {
+        "tn": 177,
+        "fp": 40,
+        "fn": 33,
+        "tp": 1231
+      },
+      "train_seconds": 227.8,
+      "parameters": 66955010,
+      "config": {
+        "model": "distilbert-base-uncased",
+        "max_length": 256,
+        "batch_size": 16,
+        "epochs": 4,
+        "learning_rate": 2e-05,
+        "weight_decay": 0.01,
+        "warmup": "10% of total steps",
+        "device": "NVIDIA L4",
+        "peak_gpu_memory_gb": 2.49,
+        "best_epoch": 2
+      },
+      "why": "Contextual subword embeddings instead of a bag of words, so negation and word order survive, at far higher parameter and compute cost.",
+      "history": [
+        {
+          "epoch": 1,
+          "train_loss": 0.2730550634360092,
+          "accuracy": 0.9412559081701553,
+          "macro_f1": 0.8866359252386772,
+          "neg_precision": 0.7754237288135594,
+          "neg_recall": 0.8433179723502304,
+          "neg_f1": 0.8079470198675497,
+          "pos_precision": 0.9726907630522088,
+          "pos_recall": 0.9580696202531646,
+          "pos_f1": 0.9653248306098048,
+          "tn": 183,
+          "fp": 34,
+          "fn": 53,
+          "tp": 1211
+        },
+        {
+          "epoch": 2,
+          "train_loss": 0.1088084634896871,
+          "accuracy": 0.950708980418636,
+          "macro_f1": 0.9001214842324552,
+          "neg_precision": 0.8428571428571429,
+          "neg_recall": 0.815668202764977,
+          "neg_f1": 0.8290398126463701,
+          "pos_precision": 0.96852871754524,
+          "pos_recall": 0.9738924050632912,
+          "pos_f1": 0.9712031558185404,
+          "tn": 177,
+          "fp": 40,
+          "fn": 33,
+          "tp": 1231
+        },
+        {
+          "epoch": 3,
+          "train_loss": 0.0557877746668669,
+          "accuracy": 0.950033760972316,
+          "macro_f1": 0.8989499811903902,
+          "neg_precision": 0.8388625592417062,
+          "neg_recall": 0.815668202764977,
+          "neg_f1": 0.8271028037383178,
+          "pos_precision": 0.968503937007874,
+          "pos_recall": 0.9731012658227848,
+          "pos_f1": 0.9707971586424624,
+          "tn": 177,
+          "fp": 40,
+          "fn": 34,
+          "tp": 1230
+        },
+        {
+          "epoch": 4,
+          "train_loss": 0.0242940139786868,
+          "accuracy": 0.949358541525996,
+          "macro_f1": 0.8977828330374718,
+          "neg_precision": 0.8349056603773585,
+          "neg_recall": 0.815668202764977,
+          "neg_f1": 0.8251748251748252,
+          "pos_precision": 0.9684791174152876,
+          "pos_recall": 0.9723101265822784,
+          "pos_f1": 0.9703908409001184,
+          "tn": 177,
+          "fp": 40,
+          "fn": 35,
+          "tp": 1229
+        }
+      ],
+      "seed_summary": {
+        "seeds": [
+          42,
+          1,
+          2
+        ],
+        "macro_f1_mean": 0.8986,
+        "macro_f1_std": 0.0089,
+        "accuracy_mean": 0.9491,
+        "accuracy_std": 0.0052
+      },
+      "comparable": true
+    }
+  ],
+  "best_comparable": "DistilBERT (4 epochs, max_length=256)"
+}

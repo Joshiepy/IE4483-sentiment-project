@@ -21,3 +21,6 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# scikit-learn model dumps written by notebooks/02_svm_mlp.ipynb
+*.joblib
