@@ -16,7 +16,7 @@ split and *one* TF-IDF vocabulary, so any difference between the rows is the
 classifier and nothing else.
 
 DistilBERT cannot be refit here - it needs a GPU and the transformers package.
-Its row is read out of the committed outputs of notebooks/03_distilbert.ipynb
+Its row is read out of the committed outputs of archive/03_distilbert_15split.ipynb
 and is clearly marked, because it was validated on a 15% split rather than 20%
 and so is NOT strictly comparable. notebooks/04_distilbert_20split.ipynb closes
 that gap; if it has been run and has written results/distilbert_metrics.json,
@@ -165,7 +165,7 @@ def distilbert_row():
     Prefers results/distilbert_metrics.json, which
     notebooks/04_distilbert_20split.ipynb writes after a matched 20% run. Falls
     back to scraping the final epoch line out of the committed outputs of
-    notebooks/03_distilbert.ipynb.
+    archive/03_distilbert_15split.ipynb.
     """
     matched = RESULTS_DIR / "distilbert_metrics.json"
     if matched.exists():
@@ -175,7 +175,7 @@ def distilbert_row():
         metrics.setdefault("source", "results/distilbert_metrics.json")
         return metrics
 
-    nb_path = PROJECT_ROOT / "notebooks" / "03_distilbert.ipynb"
+    nb_path = PROJECT_ROOT / "archive" / "03_distilbert_15split.ipynb"
     if not nb_path.exists():
         return None
     with open(nb_path, encoding="utf-8") as f:
@@ -208,7 +208,7 @@ def distilbert_row():
         "name": "DistilBERT (4 epochs, max_length=256)",
         "short": "DistilBERT",
         "owner": "Ryan",
-        "source": "notebooks/03_distilbert.ipynb (read from committed outputs)",
+        "source": "archive/03_distilbert_15split.ipynb (read from committed outputs)",
         "test_size": 0.15,
         "comparable": False,
         "config": {
