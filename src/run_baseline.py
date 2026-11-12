@@ -7,7 +7,8 @@ What it does (matching steps 1-5 of the project brief):
   2. split train into a train part and a validation part
   3. turn raw text into TF-IDF features
   4. fit a Logistic Regression classifier and score it on validation
-  5. predict the test set and write results/submission.csv
+  5. predict the test set and write results/submission_baseline.csv
+     (NOT submission.csv - that is the final DistilBERT file)
 
 This is a *baseline*. The brief encourages a neural model (RNN or BERT),
 so treat this as the number your better model has to beat.
@@ -44,7 +45,8 @@ def main():
     vectorizer = TfidfVectorizer(
         lowercase=True,
         stop_words="english",
-        ngram_range=(1, 2),   # unigrams + bigrams, so "not good" survives
+        ngram_range=(1, 2),   # unigrams + bigrams, e.g. "waste money". Note: stop_words
+                              # removes "not" first, so "not good" is NOT a feature.
         min_df=2,             # ignore words appearing in only one review
         max_features=20000,
     )
@@ -82,7 +84,7 @@ def main():
 
     submission = test_df.copy()
     submission["predictions"] = test_pred
-    out_path = RESULTS_DIR / "submission.csv"
+    out_path = RESULTS_DIR / "submission_baseline.csv"
     # The explicit line terminator keeps this file byte-identical on Windows,
     # macOS and Linux. Without it, re-running on a different OS shows up as a
     # fake 1800-line diff for your groupmates.
