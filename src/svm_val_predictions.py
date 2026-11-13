@@ -87,14 +87,15 @@ def main():
 
     bert_path = RESULTS_DIR / "distilbert_val_predictions.csv"
     if not bert_path.exists():
-        print(f"\n{bert_path.name} not found - re-run notebooks/04_distilbert_20split.ipynb "
-              "on Colab and copy it into results/ for the side-by-side comparison.")
+        print(f"\n{bert_path.name} not found - re-run notebooks/05_distilbert_tuning.ipynb "
+              "on a GPU and copy it into results/ for the side-by-side comparison.")
         return
 
     bert = pd.read_csv(bert_path)
     if bert["reviews"].tolist() != val["reviews"].tolist():
         raise SystemExit("DistilBERT file is not on the same validation split - stopping.")
-    both = val.assign(bert_predicted=bert["predicted"], bert_prob_positive=bert["prob_positive"])
+    both = val.assign(bert_predicted=(bert["prob_positive"] >= 0.5).astype(int),
+                      bert_prob_positive=bert["prob_positive"])
     both["bert_correct"] = both["bert_predicted"] == both["true"]
 
     print("\n=== DistilBERT vs Linear SVM on the same 1,481 reviews ===")
