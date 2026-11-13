@@ -14,7 +14,7 @@ Classify product reviews as **positive (1)** or **negative (0)**.
 ```
 IE4483-project/
 ├── data/          Data given by the course (do not edit these)
-├── notebooks/     01 explore, 02 SVM + MLP, 04/05 DistilBERT (Colab GPU)
+├── notebooks/     01 explore, 02 SVM + MLP, 04/05 DistilBERT (NVIDIA GPU), 06 report results
 ├── src/           Python scripts: data loading, baseline, checks, figures
 ├── results/       Everything the code produces - submission.csv is the final answer
 ├── archive/       Superseded early runs, kept for the record (not used in the report)
@@ -50,16 +50,17 @@ pip install -r requirements.txt
 | 1 | `python src/load_data.py` | Data sanity check: sizes, label balance, a sample | printed |
 | 2 | `python src/run_baseline.py` | TF-IDF + Logistic Regression baseline | `results/submission_baseline.csv` |
 | 3 | `notebooks/02_svm_mlp.ipynb` (Jupyter, run top to bottom) | **Shows the cleaned data**, then trains Linear SVM and MLP on it | `results/cleaned_train.csv`, `results/cleaned_val.csv`, `results/part_b/` |
-| 4 | `notebooks/05_distilbert_tuning.ipynb` on **Google Colab with a GPU** | Final DistilBERT: tuning runs + the submitted predictions | `submission.csv` + tuning results (downloaded as a zip) |
+| 4 | `notebooks/05_distilbert_tuning.ipynb` (Jupyter, **needs an NVIDIA GPU**) | Final DistilBERT: tuning runs + the submitted predictions | `notebooks/runs/`, including `notebooks/runs/submission.csv` |
 | 5 | `python src/check_submission.py results/submission.csv` | Checks the submission format against `data/test.json` and `data/submission_example.csv` | PASS/FAIL per check |
 | 6 | `python src/error_analysis.py` | Right/wrong examples used in report Section 6 | printed |
+| 7 | `notebooks/06_report_results.ipynb` (Jupyter, run top to bottom) | Recomputes every results table in the report from the saved results. CPU, a few seconds. | printed (outputs saved in the notebook) |
 
-**Running the DistilBERT notebook on Colab:** open
-[colab.research.google.com](https://colab.research.google.com) -> `File` -> `Upload notebook` ->
-`notebooks/05_distilbert_tuning.ipynb`; `Runtime` -> `Change runtime type` -> **GPU**; upload
-`data/train.json` and `data/test.json` to the Colab Files panel; run all cells. The final model
-is the run named `baseline` (lr 2e-5, seed 42); step 5 of the notebook writes its `submission.csv`.
-About 4 minutes per run on an L4; on CPU it would take hours.
+**Running the DistilBERT notebook on your own computer:** install `requirements.txt` (on a GPU
+machine, the CUDA build of `torch`), copy `data/train.json` and `data/test.json` into the
+`notebooks/` folder, open `notebooks/05_distilbert_tuning.ipynb` in Jupyter and Run All. It needs
+an NVIDIA GPU: about 4 minutes per run (originally run on an NVIDIA L4); on CPU it would take hours.
+Results go to `notebooks/runs/`; step 5 of the notebook writes the final model's predictions to
+`notebooks/runs/submission.csv`. The final model is the run named `baseline` (lr 2e-5, seed 42).
 
 ### 3. Which file produces which result
 
@@ -71,7 +72,7 @@ ngram_range=(1, 2), min_df=2, max_features=20000`, fitted on the training split 
 | Model | Produced by | Val. accuracy | Macro F1 | Confusion matrix [[TN, FP], [FN, TP]] |
 |---|---|---|---|---|
 | TF-IDF + Logistic Regression | `src/run_baseline.py` | 0.9095 | 0.8334 | [[173, 44], [90, 1174]] |
-| TF-IDF + Linear SVM (C=1) | `notebooks/02_svm_mlp.ipynb` | 0.9325 | 0.8585* | [[154, 63], [37, 1227]] |
+| TF-IDF + Linear SVM (C=1) | `notebooks/02_svm_mlp.ipynb` | 0.9325 | 0.8585* | [[155, 62], [38, 1226]] |
 | TF-IDF + SVD(200) + MLP(128, 64) | `notebooks/02_svm_mlp.ipynb` | 0.9115* | 0.8078* | [[131, 86], [45, 1219]] |
 | **DistilBERT (final, submitted)** | `notebooks/05_distilbert_tuning.ipynb` | **0.9507** | **0.9001** | [[177, 40], [33, 1231]] |
 
@@ -87,7 +88,21 @@ SVM 0.9325 / 0.8579 and MLP 0.9095 / 0.7995, the same as `src/compare_models.py`
 and settings are identical; the small difference comes from the library version. The
 logistic regression and DistilBERT numbers are not affected.
 
-### 4. Reproducibility
+### 4. Where each number in the report comes from
+
+| Report | Where the numbers come from |
+|---|---|
+| Tables 1, 2 (data) | `notebooks/06_report_results.ipynb` |
+| Tables 4, 5 (SVM, MLP) | saved outputs of `notebooks/02_svm_mlp.ipynb` |
+| Tables 6, 10 (DistilBERT) | `results/distilbert_tuning/`, shown in `notebooks/06_report_results.ipynb` |
+| Tables 7, 8 (SVM and TF-IDF settings) | `src/tune_hyperparameters.py` → `results/hyperparameter_search.csv` |
+| Table 9 (MLP sweep) | Jayce's sweep run (code not yet in the repo) |
+| Table 12, Figures 12, 13 (comparison) | `notebooks/06_report_results.ipynb` |
+| Tables 13, 14 (submission) | `results/submission.csv`, `src/check_submission.py` |
+| Tables 15 to 17 (error analysis) | `results/*_val_predictions.csv`, `notebooks/06_report_results.ipynb` |
+| Table 20 (resources) | `results/model_comparison.json` |
+
+### 5. Reproducibility
 
 **Every random seed is 42**: the train/validation split, every scikit-learn model
 (`random_state=42`), and for DistilBERT Python, NumPy and PyTorch seeds plus deterministic
@@ -133,10 +148,7 @@ format: two columns, `reviews` and `predictions`. Our output matches it.
 |---|---|---|
 | **Your laptop** | no | everything except DistilBERT (all CPU parts take seconds) |
 | **GitHub Codespaces** (`Code` -> `Codespaces`) | no | same as laptop, nothing to install |
-| **Google Colab** | **yes** | DistilBERT: 30-60 min per epoch on CPU vs about 1 min on a GPU |
-
-Colab deletes everything when the session closes, so download the results zip the
-notebook produces before closing the tab.
+| **A computer with an NVIDIA GPU** | **yes** | DistilBERT: 30-60 min per epoch on CPU vs about 1 min on a GPU |
 
 ---
 

@@ -232,6 +232,8 @@ so output stays identical across the group's different machines.
   teammates need to follow it.
 - Never commit trained model weights. `.gitignore` blocks `*.pt`, `*.pth`, `models/`.
 - Clear notebook outputs before committing, or merges become unreadable JSON diffs.
+  **Exception:** never clear the outputs of `notebooks/02_svm_mlp.ipynb` or
+  `notebooks/06_report_results.ipynb` - their saved outputs are the evidence for the report.
 - Record hyperparameters you tried and their scores as you go - question (c) asks
   you to justify these choices, and reconstructing them later is miserable.
 

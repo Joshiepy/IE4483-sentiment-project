@@ -14,8 +14,8 @@ plotext<6
 # Saving fitted models - notebooks/02_svm_mlp.ipynb writes a .joblib
 joblib
 
-# The DistilBERT model in notebooks/03_distilbert.ipynb. No longer optional:
-# it is a trained model in the report. On a GPU machine install the CUDA build
-# of torch instead, or just run that notebook in Colab, where both are present.
+# The DistilBERT model in notebooks/05_distilbert_tuning.ipynb. No longer optional:
+# it is a trained model in the report. That notebook needs an NVIDIA GPU; on a GPU
+# machine install the CUDA build of torch (see pytorch.org) instead of the default.
 torch
 transformers
